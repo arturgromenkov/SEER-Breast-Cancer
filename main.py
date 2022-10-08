@@ -12,6 +12,12 @@ import shutil
 
 #tensorboard --logdir="logs/"
 
+def full_outer_join_except_inner_join(LesserDataframe,BiggerDataframe):
+    lesser_indexes=LesserDataframe.index.to_list()
+    bigger_indexes=BiggerDataframe.index.to_list()
+    for i in lesser_indexes:
+        bigger_indexes.remove(i)
+    return bigger_indexes
 
 def convert_categorical_to_numeric(PandasSeries,interpolate=False):
 
@@ -32,7 +38,7 @@ shutil.rmtree("logs\\fit")
 os.mkdir("logs\\fit")
 
 
-with tf.device ("/DML:0"):
+with tf.device ("/GPU:0"):#dml
 
     dataset=pd.read_csv("res/SEER Breast Cancer Dataset .csv")
     #Dataset changing
@@ -47,15 +53,13 @@ with tf.device ("/DML:0"):
     # plt.show()
     #split dataset into validation and training
     train_df=dataset.sample(axis=0,frac=0.7,random_state=1)
-    valid_df=dataset[False*dataset.equals(train_df)]
-    print(valid_df.head(10))
+    valid_df=dataset.iloc[full_outer_join_except_inner_join(train_df,dataset)]
     #split training data into X and Y
     train_x=train_df.drop("Status",axis=1).to_numpy().astype(float)
     train_y=train_df["Status"].to_numpy().astype(float)
     #split validation data into X and Y
     valid_x=valid_df.drop("Status",axis=1).to_numpy().astype(float)
     valid_y=valid_df["Status"].to_numpy().astype(float)
-    print(valid_df.head())
     #Creating and fitting the model
     def create_model():
         return tf.keras.models.Sequential([
@@ -86,5 +90,5 @@ with tf.device ("/DML:0"):
         callbacks=[tensorboard]
     )
 
-    # results=model.evaluate(valid_x,valid_y,batch_size=32)
-    # print("test loss, test acc:", results)
+    results=model.evaluate(valid_x,valid_y,batch_size=32)
+    print("test loss, test acc:", results)
