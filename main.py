@@ -9,7 +9,6 @@ import time
 import os
 import shutil
 
-
 #tensorboard --logdir="logs/"
 
 def full_outer_join_except_inner_join(LesserDataframe,BiggerDataframe):
@@ -28,13 +27,12 @@ def convert_categorical_to_numeric(PandasSeries,interpolate=False):
     else:
         assert PandasSeries.isnull().values.any()==False,"Given column posses some nan values, use INTERPOLATE flag"
         PandasSeries.replace(PandasSeries.unique(), [i for i in range(PandasSeries.unique().shape[0])], inplace=True)
-
     return PandasSeries
 
 # Folders preparations
 shutil.rmtree("logs\\fit")
-#shutil.rmtree("models\\")
-#os.mkdir("models")
+shutil.rmtree("models\\")
+os.mkdir("models")
 os.mkdir("logs\\fit")
 
 
@@ -46,7 +44,6 @@ with tf.device ("/GPU:0"):#dml
     for i in dataset:
         dataset[i]=convert_categorical_to_numeric(dataset[i])
     dataset.interpolate(inplace=True)
-    #dataset=dataset.astype("float32")
     #Visualisation
     # fig,ax=plt.subplots(figsize=(20,20))
     # sns.heatmap(dataset.corr(),annot=True)
@@ -64,10 +61,10 @@ with tf.device ("/GPU:0"):#dml
     def create_model():
         return tf.keras.models.Sequential([
             tf.keras.layers.BatchNormalization(),#Show better results
-            tf.keras.layers.Dense(50, activation='relu'),
+            tf.keras.layers.Dense(69, activation='relu'),
             tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(25, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(20, activation='relu'),
+            tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ])
     model = create_model()
@@ -79,7 +76,7 @@ with tf.device ("/GPU:0"):#dml
     time_stop = int(time.time())
     #tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format(time_stop))
     tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format("Batch_norm"))
-    epochs = 40
+    epochs = 10
 
     model.fit(
         x=train_x,
@@ -92,3 +89,4 @@ with tf.device ("/GPU:0"):#dml
 
     results=model.evaluate(valid_x,valid_y,batch_size=32)
     print("test loss, test acc:", results)
+    model.save("models/{}".format(time_stop))
