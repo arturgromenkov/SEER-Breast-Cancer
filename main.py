@@ -35,8 +35,9 @@ shutil.rmtree("models\\")
 os.mkdir("models")
 os.mkdir("logs\\fit")
 
+first_time=time.time()
 
-with tf.device ("/GPU:0"):#dml
+with tf.device ("/CPU:0"):#dml IT APPEARED THAT CPU IS THE FASTEST FOR MY COMPUTER
 
     dataset=pd.read_csv("res/SEER Breast Cancer Dataset .csv")
     #Dataset changing
@@ -61,10 +62,12 @@ with tf.device ("/GPU:0"):#dml
     def create_model():
         return tf.keras.models.Sequential([
             tf.keras.layers.BatchNormalization(),#Show better results
-            tf.keras.layers.Dense(69, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(20, activation='relu'),
-            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(9, activation='relu'),
+            tf.keras.layers.Dropout(0.1),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dense(6, activation='relu'),
+            tf.keras.layers.Dropout(0.1),
+            tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ])
     model = create_model()
@@ -74,19 +77,24 @@ with tf.device ("/GPU:0"):#dml
         metrics=["accuracy"]
     )
     time_stop = int(time.time())
-    #tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format(time_stop))
-    tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format("Batch_norm"))
-    epochs = 10
+    tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format(time_stop))
+    #tensorboard = TensorBoard(log_dir="logs\\fit\\{}".format("Batch_norm"))
+    epochs = 15
 
     model.fit(
         x=train_x,
         y=train_y,
         epochs=epochs,
-        validation_split=0.2,
+        validation_split=0.3,
         batch_size=32,
         callbacks=[tensorboard]
     )
 
     results=model.evaluate(valid_x,valid_y,batch_size=32)
-    print("test loss, test acc:", results)
     model.save("models/{}".format(time_stop))
+    print("STARTING TIME :", first_time)
+    print("test loss, test acc:", results)
+    second_time = time.time()
+    print("ENDING TIME :", second_time)
+    print("DIFFERENCE ",second_time-first_time)
+
