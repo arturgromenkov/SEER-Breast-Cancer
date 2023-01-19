@@ -29,6 +29,7 @@ def convert_categorical_to_numeric(PandasSeries,interpolate=False):
         PandasSeries.replace(PandasSeries.unique(), [i for i in range(PandasSeries.unique().shape[0])], inplace=True)
     return PandasSeries
 
+
 # Folders preparations
 shutil.rmtree("logs\\fit")
 shutil.rmtree("models\\")
